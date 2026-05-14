@@ -28,6 +28,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const header = document.querySelector('header');
     const productGrid = document.getElementById('product-grid');
 
+    // Theme Toggle Logic
+    const themeToggle = document.getElementById('theme-toggle');
+    const body = document.body;
+    
+    // Check for saved theme
+    if (localStorage.getItem('theme') === 'dark') {
+        body.classList.add('dark-mode');
+    }
+
+    if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+            body.classList.toggle('dark-mode');
+            const isDark = body.classList.contains('dark-mode');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        });
+    }
+
     // Scroll effect
     window.addEventListener('scroll', () => {
         if (window.scrollY > 20) {

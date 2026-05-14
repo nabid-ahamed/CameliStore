@@ -136,8 +136,13 @@
                 <a href="profile.html" class="active">My Profile</a>
                 <a href="#" id="logout-btn-profile">Logout</a>
             </nav>
-            <div class="cart-icon" style="visibility: hidden;">
-                <i class="ph ph-shopping-bag"></i>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <button id="theme-toggle" class="theme-toggle" title="Toggle Theme">
+                    <i class="ph ph-moon"></i>
+                </button>
+                <div class="cart-icon" style="visibility: hidden;">
+                    <i class="ph ph-shopping-bag"></i>
+                </div>
             </div>
         </div>
     </header>
@@ -250,6 +255,16 @@
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
+            // Theme Toggle Logic
+            const themeToggle = document.getElementById('theme-toggle');
+            if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
+            if (themeToggle) {
+                themeToggle.addEventListener('click', () => {
+                    document.body.classList.toggle('dark-mode');
+                    localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+                });
+            }
+
             try {
                 const res = await fetch('/api/auth/me');
                 const data = await res.json();
