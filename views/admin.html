@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CameliStore Admin Panel</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        .admin-section {
+            display: none;
+        }
+
+        .admin-section.active {
+            display: block;
+        }
+
+        .settings-card {
+            background: #fff;
+            padding: 2rem;
+            border-radius: 8px;
+            max-width: 600px;
+        }
+
+        .top-products-list {
+            background: #fff;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .top-product-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .top-product-row:last-child {
+            border-bottom: none;
+        }
+
+        .top-product-row img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 6px;
+        }
+
+        .sales-chart {
+            background: #fff;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+        }
+
+        .bar-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        .bar-row .label {
+            width: 90px;
+            flex-shrink: 0;
+            color: var(--color-text-muted);
+        }
+
+        .bar-row .bar-wrap {
+            flex: 1;
+            background: #f0f0f0;
+            border-radius: 4px;
+            height: 22px;
+            overflow: hidden;
+        }
+
+        .bar-row .bar {
+            background: var(--color-accent);
+            height: 100%;
+            transition: width 0.3s;
+        }
+
+        .bar-row .value {
+            width: 100px;
+            flex-shrink: 0;
+            text-align: right;
+            font-weight: 600;
+        }
+
+        .order-filter-bar {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .order-filter-bar select {
+            padding: 0.5rem;
+        }
+    </style>
+</head>
+
+<body style="background-color: var(--color-bg);">
+
+    <header style="height: 70px; background: #fff; border-bottom: 1px solid rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1001;">
+        <div class="container nav-container" style="height: 100%;">
+            <div class="logo" style="font-size: 1.3rem; display: flex; align-items: center; letter-spacing: -0.5px;">
+                <img src="/images/logo.png" alt="Logo" style="height: 32px; margin-right: 12px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));">
+                <span style="font-weight: 700;">CameliStore.</span> <span style="font-weight: 400; color: #86868b; margin-left: 8px; font-size: 0.9rem; background: #f5f5f7; padding: 4px 12px; border-radius: 100px;">Admin Panel</span>
+            </div>
+            <div>
+                <a href="/" class="btn btn-outline" style="padding: 0.4rem 1rem; margin-right: 10px;">
+                    <i class="ph ph-storefront"></i> View Store
+                </a>
+                <button class="btn btn-outline" id="admin-logout-btn"
+                    style="padding: 0.4rem 1rem; border-color: red; color: red;">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="admin-layout">
+        <aside class="admin-sidebar">
+            <nav class="admin-nav">
+                <a href="#" data-target="dashboard-section" class="nav-tab active"><i class="ph ph-squares-four"></i>
+                    Dashboard</a>
+                <a href="#" data-target="products-section" class="nav-tab"><i class="ph ph-package"></i> Products</a>
+                <a href="#" data-target="orders-section" class="nav-tab"><i class="ph ph-shopping-bag"></i> Orders</a>
+                <a href="#" data-target="users-section" class="nav-tab"><i class="ph ph-users"></i> Users</a>
+                <a href="#" data-target="coupons-section" class="nav-tab"><i class="ph ph-ticket"></i> Coupons</a>
+                <a href="#" data-target="settings-section" class="nav-tab"><i class="ph ph-gear"></i> Settings</a>
+            </nav>
+        </aside>
+
+        <main class="admin-content">
+
+            <!-- Dashboard -->
+            <section id="dashboard-section" class="admin-section active">
+                <div class="admin-header">
+                    <h2>Dashboard Overview</h2>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h4>Total Orders</h4>
+                        <div class="value" id="stat-orders">…</div>
+                    </div>
+                    <div class="stat-card success">
+                        <h4>Total Revenue</h4>
+                        <div class="value" id="stat-revenue">…</div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Total Customers</h4>
+                        <div class="value" id="stat-users">…</div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Total Products</h4>
+                        <div class="value" id="stat-products">…</div>
+                    </div>
+                    <div class="stat-card warning">
+                        <h4>Pending Orders</h4>
+                        <div class="value" id="stat-pending">…</div>
+                    </div>
+                    <div class="stat-card danger">
+                        <h4>Low Stock Items</h4>
+                        <div class="value" id="stat-lowstock">…</div>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;" class="dashboard-grid">
+                    <div>
+                        <h3 style="margin-bottom: 1rem;">Sales — Last 30 Days</h3>
+                        <div class="sales-chart" id="sales-chart">
+                            <p style="color: var(--color-text-muted);">Loading…</p>
+                        </div>
+
+                        <h3 style="margin-bottom: 1rem;">Orders by Status</h3>
+                        <div class="sales-chart" id="status-chart">
+                            <p style="color: var(--color-text-muted);">Loading…</p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 style="margin-bottom: 1rem;">Top Selling Products</h3>
+                        <div class="top-products-list" id="top-products">
+                            <p style="color: var(--color-text-muted);">Loading…</p>
+                        </div>
+
+                        <h3 style="margin: 1.5rem 0 1rem;">Low Stock Alert</h3>
+                        <div class="top-products-list" id="low-stock-list">
+                            <p style="color: var(--color-text-muted);">Loading…</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Products -->
+            <section id="products-section" class="admin-section">
+                <div class="admin-header">
+                    <h2>Manage Products</h2>
+                    <button class="btn btn-primary" id="add-product-btn">
+                        <i class="ph ph-plus"></i> Add New Product
+                    </button>
+                </div>
+
+                <div class="order-filter-bar">
+                    <input type="text" id="admin-product-search" class="form-control" placeholder="Search products..."
+                        style="max-width: 300px;">
+                </div>
+
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Image</th>
+                            <th>Product</th>
+                            <th>Category</th>
+                            <th>Price</th>
+                            <th>Stock</th>
+                            <th>Featured</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-product-list"></tbody>
+                </table>
+            </section>
+
+            <!-- Orders -->
+            <section id="orders-section" class="admin-section">
+                <div class="admin-header">
+                    <h2>Manage Orders</h2>
+                </div>
+
+                <div class="order-filter-bar">
+                    <select id="order-status-filter" class="form-control" style="max-width: 200px;">
+                        <option value="all">All Statuses</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Processing">Processing</option>
+                        <option value="Shipped">Shipped</option>
+                        <option value="Delivered">Delivered</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
+                    <input type="text" id="order-search" class="form-control"
+                        placeholder="Search by customer or order #..." style="max-width: 300px;">
+                </div>
+
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Customer</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-order-list"></tbody>
+                </table>
+            </section>
+
+            <!-- Users -->
+            <section id="users-section" class="admin-section">
+                <div class="admin-header">
+                    <h2>Manage Users</h2>
+                </div>
+
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Approval</th>
+                            <th>Account</th>
+                            <th>Joined</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-user-list"></tbody>
+                </table>
+            </section>
+
+            <!-- Coupons -->
+            <section id="coupons-section" class="admin-section">
+                <div class="admin-header">
+                    <h2>Manage Coupons</h2>
+                    <button class="btn btn-primary" id="add-coupon-btn">
+                        <i class="ph ph-plus"></i> Add Coupon
+                    </button>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Discount</th>
+                            <th>Min Purchase</th>
+                            <th>Used / Max</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-coupon-list"></tbody>
+                </table>
+            </section>
+
+            <!-- Settings -->
+            <section id="settings-section" class="admin-section">
+                <div class="admin-header">
+                    <h2>Store Settings</h2>
+                </div>
+                <div class="settings-card">
+                    <form id="settings-form">
+                        <div class="form-group">
+                            <label for="setting-site-name">Site Name</label>
+                            <input type="text" id="setting-site-name" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="setting-delivery">Delivery Charge (BDT)</label>
+                            <input type="number" id="setting-delivery" class="form-control" required min="0"
+                                step="0.01">
+                            <small style="color: var(--color-text-muted); display: block; margin-top: 5px;">
+                                Added to cart total at checkout.
+                            </small>
+                        </div>
+                        <div class="form-group">
+                            <label for="setting-free-shipping">Free Shipping Minimum (BDT)</label>
+                            <input type="number" id="setting-free-shipping" class="form-control" min="0" step="0.01">
+                            <small style="color: var(--color-text-muted); display: block; margin-top: 5px;">
+                                Orders above this amount qualify for free shipping. Set to 0 to disable.
+                            </small>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save Settings</button>
+                    </form>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Product Modal -->
+    <div class="modal" id="product-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Add New Product</h3>
+                <button class="close-cart" id="close-modal-btn"><i class="ph ph-x"></i></button>
+            </div>
+            <form id="product-form">
+                <input type="hidden" id="product-id">
+                <div class="form-group">
+                    <label>Product Title</label>
+                    <input type="text" id="product-title" class="form-control" required>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label>Category</label>
+                        <input type="text" id="product-category" class="form-control" required list="cat-list">
+                        <datalist id="cat-list"></datalist>
+                    </div>
+                    <div class="form-group">
+                        <label>Price (BDT)</label>
+                        <input type="number" id="product-price" class="form-control" required min="0" step="0.01">
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label>Stock</label>
+                        <input type="number" id="product-stock" class="form-control" required min="0" step="1">
+                    </div>
+                    <div class="form-group">
+                        <label>&nbsp;</label>
+                        <label style="display: flex; align-items: center; gap: 8px; padding: 0.7rem 0;">
+                            <input type="checkbox" id="product-featured"> Mark as Featured
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Upload Image File</label>
+                    <input type="file" id="product-image-file" class="form-control" accept="image/*">
+                    <small style="color: var(--color-text-muted); display: block; margin-top: 5px;">Or paste an image
+                        URL below.</small>
+                </div>
+                <div class="form-group">
+                    <label>Image URL</label>
+                    <input type="text" id="product-image" class="form-control" placeholder="https://...">
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="product-desc" class="form-control" rows="3"></textarea>
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                    <button type="button" class="btn btn-outline" id="cancel-btn">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Product</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Order Modal -->
+    <div class="modal" id="order-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Order Details</h3>
+                <button class="close-cart" id="close-order-modal-btn"><i class="ph ph-x"></i></button>
+            </div>
+            <div id="order-modal-content" style="margin-top: 1rem;"></div>
+        </div>
+    </div>
+
+    <!-- Coupon Modal -->
+    <div class="modal" id="coupon-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Coupon</h3>
+                <button class="close-cart" id="close-coupon-modal-btn"><i class="ph ph-x"></i></button>
+            </div>
+            <form id="coupon-form">
+                <div class="form-group">
+                    <label>Coupon Code</label>
+                    <input type="text" id="coupon-code" class="form-control" required
+                        style="text-transform: uppercase;">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label>Discount Type</label>
+                        <select id="coupon-type" class="form-control" required>
+                            <option value="percent">Percentage (%)</option>
+                            <option value="fixed">Fixed Amount (৳)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Discount Value</label>
+                        <input type="number" id="coupon-value" class="form-control" required min="0" step="0.01">
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label>Min Purchase (৳)</label>
+                        <input type="number" id="coupon-min" class="form-control" min="0" step="0.01" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Max Uses (0 = unlimited)</label>
+                        <input type="number" id="coupon-max" class="form-control" min="0" step="1" value="0">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Expires At (optional)</label>
+                    <input type="datetime-local" id="coupon-expires" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="coupon-active" checked> Active
+                    </label>
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                    <button type="button" class="btn btn-outline" id="coupon-cancel-btn">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="/js/admin.js"></script>
+</body>
+
+</html>

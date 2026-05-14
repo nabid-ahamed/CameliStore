@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A minimalist and premium fashion ecommerce platform.">
+    <title>CameliStore | Premium Fashion</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+
+<body>
+
+    <!-- Navigation -->
+    <header>
+        <div class="container nav-container">
+            <a href="/" class="logo" style="text-decoration: none; color: inherit; display: flex; align-items: center;">
+                <img src="/images/logo.png" alt="Logo" style="height: 32px; margin-right: 10px;">
+                CameliStore.
+            </a>
+            <nav class="nav-links" id="auth-nav">
+                <a href="/" class="active">Shop</a>
+                <a href="login.html">Login / Sign Up</a>
+            </nav>
+            <div class="cart-icon" id="cart-btn">
+                <i class="ph ph-shopping-bag"></i>
+                <span class="cart-count" id="cart-badge">0</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h1>Elevate Your Style.</h1>
+            <p>Discover our curated collection of minimalist fashion pieces designed for the modern individual.</p>
+            <a href="#products" class="btn btn-primary">Shop the Collection</a>
+        </div>
+    </section>
+
+    <!-- Featured Products -->
+    <section class="container featured-section" id="featured-section" style="display: none;">
+        <h2 class="section-title">Featured Picks</h2>
+        <div class="product-grid" id="featured-grid"></div>
+    </section>
+
+    <!-- Search / Filter / Sort Toolbar -->
+    <section class="container" id="products" style="margin-top: 2rem;">
+        <h2 class="section-title">Latest Arrivals</h2>
+
+        <div class="filter-bar">
+            <div class="search-wrap">
+                <i class="ph ph-magnifying-glass"></i>
+                <input type="text" id="search-input" class="form-control" placeholder="Search products...">
+            </div>
+            <select id="category-filter" class="form-control">
+                <option value="all">All Categories</option>
+            </select>
+            <select id="sort-filter" class="form-control">
+                <option value="newest">Newest</option>
+                <option value="price_asc">Price: Low to High</option>
+                <option value="price_desc">Price: High to Low</option>
+                <option value="title">Name: A-Z</option>
+            </select>
+        </div>
+
+        <div class="active-filters" id="active-filters"></div>
+    </section>
+
+    <!-- Main Products Section -->
+    <main class="container products-section">
+        <div class="product-grid" id="product-grid">
+            <!-- Skeleton -->
+            <div class="loading-skeleton"></div>
+            <div class="loading-skeleton"></div>
+            <div class="loading-skeleton"></div>
+            <div class="loading-skeleton"></div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div>
+                    <div class="logo" style="margin-bottom: 0.5rem; display: flex; align-items: center;">
+                        <img src="/images/logo.png" alt="Logo" style="height: 28px; margin-right: 8px;">
+                        CameliStore.
+                    </div>
+                    <p style="font-size: 0.9rem;">Minimalist fashion, made for everyday luxury.</p>
+                </div>
+                <div>
+                    <h4>Shop</h4>
+                    <a href="/">All Products</a>
+                    <a href="/?category=Bags">Bags</a>
+                    <a href="/?category=Watches">Watches</a>
+                    <a href="/?category=Coats">Coats</a>
+                </div>
+                <div>
+                    <h4>Account</h4>
+                    <a href="login.html">Login</a>
+                    <a href="signup.html">Sign Up</a>
+                    <a href="profile.html">My Profile</a>
+                </div>
+                <div>
+                    <h4>Support</h4>
+                    <p style="font-size: 0.9rem;">Cash on Delivery</p>
+                    <p style="font-size: 0.9rem;">Free shipping over ৳5000</p>
+                </div>
+            </div>
+            <p style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid rgba(0,0,0,0.05); font-size: 0.85rem;">
+                &copy; 2026 CameliStore Fashion. All rights reserved.
+            </p>
+        </div>
+    </footer>
+
+    <!-- Cart Sidebar -->
+    <div class="overlay" id="overlay"></div>
+    <div class="cart-sidebar" id="cart-sidebar">
+        <div class="cart-header">
+            <h3>Your Cart</h3>
+            <button class="close-cart" id="close-cart"><i class="ph ph-x"></i></button>
+        </div>
+
+        <div class="cart-items" id="cart-items-container"></div>
+
+        <div class="cart-footer">
+            <div class="cart-total">
+                <span>Subtotal:</span>
+                <span id="cart-subtotal-price">৳0.00</span>
+            </div>
+            <div class="cart-total">
+                <span>Delivery:</span>
+                <span id="cart-delivery-price">৳0.00</span>
+            </div>
+            <div class="cart-total cart-total-final">
+                <span>Total:</span>
+                <span id="cart-total-price">৳0.00</span>
+            </div>
+
+            <div id="checkout-form-container" style="display: none; margin-top: 15px;">
+                <h4 style="margin-bottom: 10px;">Shipping Details</h4>
+                <input type="text" id="checkout-name" class="form-control" placeholder="Full Name"
+                    style="margin-bottom: 10px;">
+                <input type="text" id="checkout-phone" class="form-control" placeholder="Phone Number (01XXXXXXXXX)"
+                    style="margin-bottom: 10px;">
+                <textarea id="checkout-address" class="form-control"
+                    placeholder="Full Address (e.g. House 1, Road 2, Dhaka)" style="margin-bottom: 10px;"
+                    rows="3"></textarea>
+
+                <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+                    <input type="text" id="coupon-input" class="form-control" placeholder="Coupon code (optional)">
+                    <button type="button" class="btn btn-outline" id="apply-coupon-btn"
+                        style="white-space: nowrap;">Apply</button>
+                </div>
+                <div id="coupon-msg" style="font-size: 0.85rem; margin-bottom: 10px;"></div>
+
+                <div style="font-size: 0.9rem; color: #666; margin-bottom: 15px;">
+                    <i class="ph ph-money"></i> Payment Method: Cash on Delivery (COD)
+                </div>
+                <button class="btn btn-primary btn-full" id="confirm-order-btn">Confirm Order</button>
+            </div>
+            <button class="btn btn-primary btn-full" id="checkout-btn">Proceed to Checkout</button>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Application Logic -->
+    <script src="js/store.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Details - CameliStore</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        .breadcrumbs {
+            font-size: 0.9rem;
+            margin: 1.5rem 0;
+            color: var(--color-text-muted);
+        }
+
+        .breadcrumbs a:hover {
+            color: var(--color-text);
+        }
+
+        .breadcrumbs i {
+            font-size: 0.7rem;
+            margin: 0 0.5rem;
+        }
+
+        .single-product {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            margin: 2rem auto 4rem;
+            align-items: start;
+        }
+
+        .sp-image-wrap {
+            background: #f8f9fa;
+            border-radius: 12px;
+            overflow: hidden;
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .sp-image-wrap img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+
+        .sp-details {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .sp-category {
+            color: var(--color-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .sp-title {
+            font-size: 2.5rem;
+            line-height: 1.2;
+        }
+
+        .sp-price {
+            font-size: 1.75rem;
+            font-weight: 600;
+        }
+
+        .sp-desc {
+            color: var(--color-text-muted);
+            line-height: 1.7;
+        }
+
+        .sp-stock {
+            display: inline-block;
+            font-size: 0.9rem;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        .sp-stock.in {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .sp-stock.low {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .sp-stock.out {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .qty-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .qty-selector {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+        }
+
+        .qty-selector button {
+            background: #fff;
+            border: none;
+            padding: 0.65rem 0.9rem;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .qty-selector input {
+            width: 50px;
+            text-align: center; border: none;
+            padding: 0.5rem 0;
+            font-family: inherit;
+            font-size: 1rem;
+        }
+
+        .qty-selector input:focus {
+            outline: none;
+        }
+
+        .sp-actions {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-top: 0.5rem;
+        }
+
+        .related-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .review-stars {
+            color: #ffc107;
+            font-size: 1.1rem;
+        }
+
+        @media (max-width: 768px) {
+            .single-product {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .sp-title {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Navigation -->
+    <header>
+        <div class="container nav-container">
+            <a href="/" class="logo" style="text-decoration: none; color: inherit; display: flex; align-items: center;">
+                <img src="/images/logo.png" alt="Logo" style="height: 32px; margin-right: 10px;">
+                CameliStore.
+            </a>
+            <nav class="nav-links" id="auth-nav">
+                <a href="/" class="active">Shop</a>
+                <a href="login.html">Login / Sign Up</a>
+            </nav>
+            <div class="cart-icon" id="cart-btn">
+                <i class="ph ph-shopping-bag"></i>
+                <span class="cart-count" id="cart-badge" style="display: none;">0</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Breadcrumbs -->
+        <div class="breadcrumbs" id="breadcrumbs">
+            <a href="/">Home</a>
+        </div>
+
+        <div id="product-container">
+            <p style="text-align: center; margin-top: 4rem;">Loading product...</p>
+        </div>
+
+        <!-- Related Products -->
+        <section id="related-section" style="margin-top: 4rem; display: none;">
+            <h2 class="section-title">You May Also Like</h2>
+            <div class="related-grid" id="related-grid"></div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 CameliStore Fashion. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Cart Sidebar -->
+    <div class="overlay" id="overlay"></div>
+    <div class="cart-sidebar" id="cart-sidebar">
+        <div class="cart-header">
+            <h3>Your Cart</h3>
+            <button class="close-cart" id="close-cart"><i class="ph ph-x"></i></button>
+        </div>
+
+        <div class="cart-items" id="cart-items-container"></div>
+
+        <div class="cart-footer">
+            <div class="cart-total"><span>Subtotal:</span><span id="cart-subtotal-price">৳0.00</span></div>
+            <div class="cart-total"><span>Delivery:</span><span id="cart-delivery-price">৳0.00</span></div>
+            <div class="cart-total cart-total-final"><span>Total:</span><span id="cart-total-price">৳0.00</span></div>
+
+            <div id="checkout-form-container" style="display: none; margin-top: 15px;">
+                <h4 style="margin-bottom: 10px;">Shipping Details</h4>
+                <input type="text" id="checkout-name" class="form-control" placeholder="Full Name"
+                    style="margin-bottom: 10px;">
+                <input type="text" id="checkout-phone" class="form-control" placeholder="Phone (01XXXXXXXXX)"
+                    style="margin-bottom: 10px;">
+                <textarea id="checkout-address" class="form-control" placeholder="Full Address"
+                    style="margin-bottom: 10px;" rows="3"></textarea>
+
+                <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+                    <input type="text" id="coupon-input" class="form-control" placeholder="Coupon code (optional)">
+                    <button type="button" class="btn btn-outline" id="apply-coupon-btn"
+                        style="white-space: nowrap;">Apply</button>
+                </div>
+                <div id="coupon-msg" style="font-size: 0.85rem; margin-bottom: 10px;"></div>
+
+                <div style="font-size: 0.9rem; color: #666; margin-bottom: 15px;"><i class="ph ph-money"></i> COD</div>
+                <button class="btn btn-primary btn-full" id="confirm-order-btn">Confirm Order</button>
+            </div>
+            <button class="btn btn-primary btn-full" id="checkout-btn">Proceed to Checkout</button>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="js/store.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const productId = urlParams.get('id');
+            const container = document.getElementById('product-container');
+
+            if (!productId) {
+                container.innerHTML = '<p style="text-align: center; margin-top: 4rem;">Product not found.</p>';
+                return;
+            }
+
+            let currentProduct = null;
+            let currentUser = null;
+            let inWishlist = false;
+
+            try {
+                const [productRes, authRes] = await Promise.all([
+                    fetch('/api/products/' + encodeURIComponent(productId)),
+                    fetch('/api/auth/me')
+                ]);
+                if (!productRes.ok) throw new Error('Not found');
+                currentProduct = await productRes.json();
+                const authData = await authRes.json();
+                currentUser = authData.user;
+
+                if (currentUser) {
+                    try {
+                        const wRes = await fetch('/api/wishlist');
+                        if (wRes.ok) {
+                            const wList = await wRes.json();
+                            inWishlist = wList.some(w => w.id === productId);
+                        }
+                    } catch (e) { }
+                }
+
+                document.title = currentProduct.title + ' - CameliStore';
+
+                // Breadcrumbs
+                document.getElementById('breadcrumbs').innerHTML = `
+                    <a href="/">Home</a>
+                    <i class="ph ph-caret-right"></i>
+                    <a href="/?category=${encodeURIComponent(currentProduct.category)}">${currentProduct.category}</a>
+                    <i class="ph ph-caret-right"></i>
+                    <span>${currentProduct.title}</span>
+                `;
+
+                renderProduct();
+                loadReviews(productId);
+                loadRelated();
+
+            } catch (err) {
+                container.innerHTML = '<div style="text-align: center; margin-top: 4rem;"><h2>Product not found</h2><p style="margin-top: 1rem;"><a href="/" class="btn btn-primary">Back to shop</a></p></div>';
+            }
+
+            function renderProduct() {
+                const p = currentProduct;
+                const stockClass = p.stock <= 0 ? 'out' : p.stock <= 5 ? 'low' : 'in';
+                const stockLabel = p.stock <= 0 ? `Out of Stock` : p.stock <= 5 ? `Only ${p.stock} left in stock` : `In Stock (${p.stock} available)`;
+
+                container.innerHTML = `
+                    <div class="single-product">
+                        <div class="sp-image-wrap">
+                            <img id="sp-main-img" src="${p.image}" alt="${p.title}" onerror="this.src='https://placehold.co/500x600?text=No+Image'">
+                        </div>
+                        <div class="sp-details">
+                            <div class="sp-category">${p.category}${p.featured ? ' · <span style="color:#000;font-weight:600;">Featured</span>' : ''}</div>
+                            <h1 class="sp-title">${p.title}</h1>
+                            <div class="sp-price">${formatCurrency(p.price)}</div>
+                            <div><span class="sp-stock ${stockClass}">${stockLabel}</span></div>
+                            <div class="sp-desc">${p.description || 'No description available for this product.'}</div>
+
+                            <div class="qty-row">
+                                <label style="font-weight: 500;">Quantity:</label>
+                                <div class="qty-selector">
+                                    <button type="button" id="qty-minus">−</button>
+                                    <input type="number" id="qty-input" value="1" min="1" max="${Math.max(1, p.stock)}">
+                                    <button type="button" id="qty-plus">+</button>
+                                </div>
+                            </div>
+
+                            <div class="sp-actions">
+                                <button class="btn btn-primary" id="add-to-cart-btn" ${p.stock <= 0 ? 'disabled' : ''} style="padding: 1rem 2rem; flex: 1; min-width: 180px;">
+                                    <i class="ph ph-shopping-cart" style="margin-right: 8px;"></i> ${p.stock <= 0 ? 'Out of Stock' : 'Add to Cart'}
+                                </button>
+                                <button class="btn btn-outline" id="wishlist-toggle-btn" style="padding: 1rem 1.25rem;">
+                                    <i class="ph${inWishlist ? '-fill' : ''} ph-heart"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="reviews-section" style="margin-top: 4rem; border-top: 1px solid #eee; padding-top: 2rem;">
+                        <h2>Customer Reviews</h2>
+                        <div id="review-form-container" style="display: none; margin-top: 1.5rem; background: #f8f9fa; padding: 1.5rem; border-radius: 8px;">
+                            <h4>Write a Review</h4>
+                            <form id="review-form" style="margin-top: 1rem;">
+                                <div class="form-group">
+                                    <label>Rating</label>
+                                    <select id="review-rating" class="form-control" required style="max-width: 200px;">
+                                        <option value="5">★★★★★ (5) Excellent</option>
+                                        <option value="4">★★★★☆ (4) Good</option>
+                                        <option value="3">★★★☆☆ (3) Average</option>
+                                        <option value="2">★★☆☆☆ (2) Poor</option>
+                                        <option value="1">★☆☆☆☆ (1) Terrible</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Comment</label>
+                                    <textarea id="review-comment" class="form-control" rows="3" required minlength="3"></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Submit Review</button>
+                            </form>
+                        </div>
+                        <div id="login-to-review-msg" style="margin-top: 1rem; color: var(--color-text-muted);">
+                            <a href="login.html" style="color: var(--color-accent); font-weight: 600;">Log in</a> and purchase this item to write a review.
+                        </div>
+                        <div id="reviews-list" style="margin-top: 2rem;"><p>Loading reviews...</p></div>
+                    </div>
+                `;
+
+                // Wire qty selector
+                const qtyInput = document.getElementById('qty-input');
+                document.getElementById('qty-minus').addEventListener('click', () => {
+                    qtyInput.value = Math.max(1, parseInt(qtyInput.value) - 1);
+                });
+                document.getElementById('qty-plus').addEventListener('click', () => {
+                    const max = Math.max(1, p.stock);
+                    qtyInput.value = Math.min(max, parseInt(qtyInput.value) + 1);
+                });
+
+                document.getElementById('add-to-cart-btn').addEventListener('click', () => {
+                    const qty = parseInt(qtyInput.value) || 1;
+                    window.addToCart(p.id, qty);
+                });
+
+                document.getElementById('wishlist-toggle-btn').addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    if (!currentUser) {
+                        showToast('Please log in to use wishlist', 'error');
+                        setTimeout(() => window.location.href = '/login.html', 800);
+                        return;
+                    }
+                    inWishlist = !inWishlist;
+                    try {
+                        if (inWishlist) {
+                            await fetch('/api/wishlist', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ product_id: p.id })
+                            });
+                            showToast('Added to wishlist', 'success');
+                        } else {
+                            await fetch('/api/wishlist/' + p.id, { method: 'DELETE' });
+                            showToast('Removed from wishlist');
+                        }
+                    } catch (err) { }
+                    const icon = e.currentTarget.querySelector('i');
+                    icon.className = inWishlist ? 'ph-fill ph-heart' : 'ph ph-heart';
+                });
+
+                // Auth-based review form
+                if (currentUser) {
+                    document.getElementById('login-to-review-msg').style.display = 'none';
+                    document.getElementById('review-form-container').style.display = 'block';
+                    document.getElementById('review-form').addEventListener('submit', async (e) => {
+                        e.preventDefault();
+                        const rating = document.getElementById('review-rating').value;
+                        const comment = document.getElementById('review-comment').value.trim();
+                        try {
+                            const submitRes = await fetch('/api/reviews', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ product_id: productId, rating, comment })
+                            });
+                            const submitData = await submitRes.json();
+                            if (submitRes.ok) {
+                                showToast('Review submitted!', 'success');
+                                document.getElementById('review-form').reset();
+                                loadReviews(productId);
+                            } else {
+                                showToast(submitData.error || 'Failed to submit review.', 'error');
+                            }
+                        } catch (err) {
+                            showToast('An error occurred.', 'error');
+                        }
+                    });
+                }
+            }
+        });
+
+        async function loadReviews(productId) {
+            const list = document.getElementById('reviews-list');
+            try {
+                const res = await fetch('/api/reviews/' + encodeURIComponent(productId));
+                const reviews = await res.json();
+
+                if (reviews.length === 0) {
+                    list.innerHTML = '<p style="color: var(--color-text-muted);">No reviews yet. Be the first to review!</p>';
+                    return;
+                }
+
+                const avg = reviews.reduce((s, r) => s + r.rating, 0) / reviews.length;
+                const summary = `<div style="margin-bottom: 1.5rem;">
+                    <strong style="font-size: 1.5rem;">${avg.toFixed(1)}</strong>
+                    <span class="review-stars">${'★'.repeat(Math.round(avg))}${'☆'.repeat(5 - Math.round(avg))}</span>
+                    <span style="color: var(--color-text-muted); margin-left: 8px;">(${reviews.length} review${reviews.length > 1 ? 's' : ''})</span>
+                </div>`;
+
+                list.innerHTML = summary + reviews.map(r => `
+                    <div style="border-bottom: 1px solid #eee; padding: 1rem 0;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <strong>${r.username}</strong>
+                            <span class="review-stars">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</span>
+                        </div>
+                        <p style="margin: 0; color: var(--color-text-muted);">${escapeHtml(r.comment)}</p>
+                        <small style="color: #aaa; font-size: 0.8rem;">${new Date(r.created_at).toLocaleDateString()}</small>
+                    </div>
+                `).join('');
+            } catch (err) {
+                list.innerHTML = '<p>Failed to load reviews.</p>';
+            }
+        }
+
+        async function loadRelated() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const productId = urlParams.get('id');
+            try {
+                const res = await fetch('/api/products/' + encodeURIComponent(productId) + '/related');
+                const items = await res.json();
+                if (!items.length) return;
+
+                const sec = document.getElementById('related-section');
+                const grid = document.getElementById('related-grid');
+                sec.style.display = 'block';
+                grid.innerHTML = items.map(p => `
+                    <div class="product-card">
+                        <div class="product-image-wrap" onclick="window.location.href='product.html?id=${p.id}'" style="cursor: pointer;">
+                            <img src="${p.image}" alt="${p.title}" class="product-image" onerror="this.src='https://placehold.co/300x400?text=No+Image'">
+                        </div>
+                        <div class="product-info">
+                            <span class="product-category">${p.category}</span>
+                            <h3 class="product-title" onclick="window.location.href='product.html?id=${p.id}'" style="cursor: pointer;">${p.title}</h3>
+                            <div class="product-price">${formatCurrency(p.price)}</div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (err) { }
+        }
+
+        function escapeHtml(s) {
+            return String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+    </script>
+</body>
+
+</html>

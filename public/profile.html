@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - CameliStore</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        .profile-layout {
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .profile-sidebar {
+            background: #fff;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            height: fit-content;
+        }
+
+        .profile-tab-link {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1rem;
+            color: var(--color-text-muted);
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .profile-tab-link:hover,
+        .profile-tab-link.active {
+            background: var(--color-bg);
+            color: var(--color-text);
+        }
+
+        .profile-card {
+            background: #fff;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .tab-section {
+            display: none;
+        }
+
+        .tab-section.active {
+            display: block;
+        }
+
+        .order-item {
+            border: 1px solid #eee;
+            padding: 1.25rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 0.75rem;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .wishlist-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .wishlist-card {
+            background: #fff;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .wishlist-card img {
+            width: 100%;
+            aspect-ratio: 4/5;
+            object-fit: cover;
+        }
+
+        .wishlist-card .info {
+            padding: 0.75rem;
+        }
+
+        .wishlist-card h4 {
+            font-size: 0.95rem;
+        }
+
+        .wishlist-remove {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(255, 255, 255, 0.95);
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            color: var(--color-danger);
+        }
+
+        @media (max-width: 768px) {
+            .profile-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="container nav-container">
+            <a href="/" class="logo" style="text-decoration: none; color: inherit; display: flex; align-items: center;">
+                <img src="/images/logo.png" alt="Logo" style="height: 32px; margin-right: 10px;">
+                CameliStore.
+            </a>
+            <nav class="nav-links" id="auth-nav">
+                <a href="/">Shop</a>
+                <a href="profile.html" class="active">My Profile</a>
+                <a href="#" id="logout-btn-profile">Logout</a>
+            </nav>
+            <div class="cart-icon" style="visibility: hidden;">
+                <i class="ph ph-shopping-bag"></i>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <h1 style="margin-top: 2rem;">My Account</h1>
+        <p style="color: var(--color-text-muted);" id="welcome-msg">Welcome back!</p>
+
+        <div class="profile-layout">
+            <!-- Sidebar -->
+            <aside class="profile-sidebar">
+                <div class="profile-tab-link active" data-tab="profile-tab"><i class="ph ph-user-circle"></i> Profile
+                </div>
+                <div class="profile-tab-link" data-tab="orders-tab"><i class="ph ph-shopping-bag"></i> My Orders</div>
+                <div class="profile-tab-link" data-tab="wishlist-tab"><i class="ph ph-heart"></i> Wishlist</div>
+                <div class="profile-tab-link" data-tab="password-tab"><i class="ph ph-lock"></i> Password</div>
+            </aside>
+
+            <!-- Main Content -->
+            <div>
+                <!-- Profile -->
+                <div id="profile-tab" class="tab-section active profile-card">
+                    <h2 style="margin-bottom: 1rem;">Profile Details</h2>
+                    <form id="profile-form">
+                        <div class="form-group">
+                            <label>Username</label>
+                            <input type="text" id="prof-username" class="form-control" disabled>
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="prof-email" class="form-control" placeholder="you@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label>Phone Number</label>
+                            <input type="text" id="prof-phone" class="form-control" placeholder="01XXXXXXXXX">
+                        </div>
+                        <div class="form-group">
+                            <label>Shipping Address</label>
+                            <textarea id="prof-address" class="form-control" rows="3"
+                                placeholder="Full Address (House, Road, Area, City)"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </form>
+                </div>
+
+                <!-- Orders -->
+                <div id="orders-tab" class="tab-section profile-card">
+                    <h2 style="margin-bottom: 1rem;">Order History</h2>
+                    <div id="orders-list">
+                        <p>Loading orders...</p>
+                    </div>
+                </div>
+
+                <!-- Wishlist -->
+                <div id="wishlist-tab" class="tab-section profile-card">
+                    <h2 style="margin-bottom: 1rem;">My Wishlist</h2>
+                    <div id="wishlist-list">
+                        <p>Loading wishlist...</p>
+                    </div>
+                </div>
+
+                <!-- Password -->
+                <div id="password-tab" class="tab-section profile-card">
+                    <h2 style="margin-bottom: 1rem;">Change Password</h2>
+                    <form id="password-form" style="max-width: 400px;">
+                        <div class="form-group">
+                            <label>Current Password</label>
+                            <input type="password" id="current-password" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>New Password</label>
+                            <input type="password" id="new-password" class="form-control" required minlength="4">
+                        </div>
+                        <div class="form-group">
+                            <label>Confirm New Password</label>
+                            <input type="password" id="confirm-password" class="form-control" required minlength="4">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Update Password</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer style="margin-top: 4rem;">
+        <div class="container">
+            <p>&copy; 2026 CameliStore Fashion. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <div class="toast-container" id="toast-container"></div>
+
+    <script>
+        function formatCurrency(amount) {
+            if (amount == null || isNaN(amount)) return '৳0.00';
+            return '৳' + parseFloat(amount).toFixed(2);
+        }
+        function showToast(message, type) {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = 'toast' + (type === 'error' ? ' toast-error' : type === 'success' ? ' toast-success' : '');
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => { toast.classList.add('show'); }, 10);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const res = await fetch('/api/auth/me');
+                const data = await res.json();
+                if (!data.user) { window.location.href = '/login.html'; return; }
+
+                document.getElementById('prof-username').value = data.user.username;
+                document.getElementById('prof-email').value = data.user.email || '';
+                document.getElementById('prof-phone').value = data.user.phone || '';
+                document.getElementById('prof-address').value = data.user.address || '';
+                document.getElementById('welcome-msg').textContent = `Welcome back, ${data.user.username}!`;
+
+                if (data.user.role === 'admin') {
+                    const nav = document.getElementById('auth-nav');
+                    nav.innerHTML = `<a href="/">Shop</a><a href="/admin">Admin Panel</a><a href="profile.html" class="active">My Profile</a><a href="#" id="logout-btn-profile">Logout</a>`;
+                }
+                setupLogout();
+
+                // Tab navigation
+                document.querySelectorAll('.profile-tab-link').forEach(t => {
+                    t.addEventListener('click', () => {
+                        document.querySelectorAll('.profile-tab-link').forEach(x => x.classList.remove('active'));
+                        document.querySelectorAll('.tab-section').forEach(x => x.classList.remove('active'));
+                        t.classList.add('active');
+                        const tabId = t.getAttribute('data-tab');
+                        document.getElementById(tabId).classList.add('active');
+                        if (tabId === 'orders-tab') fetchOrders();
+                        if (tabId === 'wishlist-tab') fetchWishlist();
+                    });
+                });
+
+                fetchOrders();
+            } catch (err) { console.error(err); }
+
+            function setupLogout() {
+                const btn = document.getElementById('logout-btn-profile');
+                if (btn) btn.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    await fetch('/api/auth/logout', { method: 'POST' });
+                    window.location.href = '/';
+                });
+            }
+
+            document.getElementById('profile-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = document.getElementById('prof-email').value.trim();
+                const phone = document.getElementById('prof-phone').value;
+                const address = document.getElementById('prof-address').value;
+                try {
+                    const res = await fetch('/api/auth/profile', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, phone, address })
+                    });
+                    const data = await res.json();
+                    if (res.ok) showToast('Profile updated successfully!', 'success');
+                    else showToast(data.error || 'Error updating profile', 'error');
+                } catch (err) { console.error(err); }
+            });
+
+            document.getElementById('password-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const cp = document.getElementById('current-password').value;
+                const np = document.getElementById('new-password').value;
+                const conf = document.getElementById('confirm-password').value;
+                if (np !== conf) return showToast('Passwords do not match', 'error');
+                try {
+                    const res = await fetch('/api/auth/password', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ current_password: cp, new_password: np })
+                    });
+                    const data = await res.json();
+                    if (res.ok) {
+                        showToast('Password changed successfully!', 'success');
+                        e.target.reset();
+                    } else {
+                        showToast(data.error || 'Failed to change password', 'error');
+                    }
+                } catch (err) { showToast('Error changing password', 'error'); }
+            });
+
+            async function fetchOrders() {
+                try {
+                    const res = await fetch('/api/orders');
+                    const orders = await res.json();
+                    const container = document.getElementById('orders-list');
+                    if (orders.length === 0) {
+                        container.innerHTML = '<p style="color: var(--color-text-muted);">You have no orders yet. <a href="/" style="color: var(--color-accent);">Shop now →</a></p>';
+                        return;
+                    }
+                    container.innerHTML = orders.map(order => {
+                        const items = JSON.parse(order.items);
+                        const status = order.status.toLowerCase();
+                        return `
+                            <div class="order-item">
+                                <div class="order-header">
+                                    <span>Order #${order.id}</span>
+                                    <span class="status-badge ${status}">${order.status}</span>
+                                </div>
+                                <div style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 0.75rem;">
+                                    Placed on ${new Date(order.created_at).toLocaleString()}
+                                </div>
+                                <div>
+                                    ${items.map(item => `
+                                        <div style="display: flex; justify-content: space-between; font-size: 0.9rem; padding: 4px 0;">
+                                            <span>${item.quantity}× ${item.title}</span>
+                                            <span>${formatCurrency(item.price * item.quantity)}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                                <div style="border-top: 1px dashed #ddd; margin-top: 10px; padding-top: 10px; text-align: right; font-size: 0.9rem;">
+                                    <div>Subtotal: ${formatCurrency(order.subtotal || 0)}</div>
+                                    ${order.discount > 0 ? `<div style="color: var(--color-success);">Discount${order.coupon_code ? ` (${order.coupon_code})` : ''}: −${formatCurrency(order.discount)}</div>` : ''}
+                                    <div>Delivery: ${formatCurrency(order.delivery_charge)}</div>
+                                    <strong style="font-size: 1rem;">Total: ${formatCurrency(order.total)}</strong>
+                                </div>
+                                <div style="margin-top: 0.75rem; font-size: 0.85rem; color: var(--color-text-muted);">
+                                    📍 ${order.shipping_address}<br>
+                                    📞 ${order.phone}
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                } catch (err) {
+                    document.getElementById('orders-list').innerHTML = '<p>Error loading orders.</p>';
+                }
+            }
+
+            async function fetchWishlist() {
+                const list = document.getElementById('wishlist-list');
+                try {
+                    const res = await fetch('/api/wishlist');
+                    const items = await res.json();
+                    if (items.length === 0) {
+                        list.innerHTML = '<p style="color: var(--color-text-muted);">Your wishlist is empty. <a href="/" style="color: var(--color-accent);">Browse products →</a></p>';
+                        return;
+                    }
+                    list.innerHTML = `<div class="wishlist-grid">` + items.map(p => `
+                        <div class="wishlist-card">
+                            <button class="wishlist-remove" onclick="removeFromWishlist('${p.id}')" title="Remove"><i class="ph ph-trash"></i></button>
+                            <a href="product.html?id=${p.id}">
+                                <img src="${p.image}" alt="${p.title}" onerror="this.src='https://placehold.co/300x400?text=No+Image'">
+                                <div class="info">
+                                    <span class="product-category">${p.category}</span>
+                                    <h4 class="product-title">${p.title}</h4>
+                                    <div class="product-price" style="margin-top: 0.25rem;">${formatCurrency(p.price)}</div>
+                                </div>
+                            </a>
+                        </div>
+                    `).join('') + `</div>`;
+                } catch (err) { list.innerHTML = '<p>Error loading wishlist.</p>'; }
+            }
+
+            window.removeFromWishlist = async (productId) => {
+                try {
+                    await fetch('/api/wishlist/' + productId, { method: 'DELETE' });
+                    showToast('Removed from wishlist');
+                    fetchWishlist();
+                } catch (err) { }
+            };
+        });
+    </script>
+</body>
+
+</html>
