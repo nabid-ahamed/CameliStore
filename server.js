@@ -1,7 +1,9 @@
 const express = require('express');
-const sqlite3 = require('sqlite3').verbose();
+require('dotenv').config();
+const { Pool } = require('pg');
+const { Redis } = require('@upstash/redis');
 const session = require('express-session');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
@@ -10,15 +12,7 @@ const multer = require('multer');
 const uploadDir = path.join(__dirname, 'public/uploads');
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, uploadDir);
-    },
-    filename: function (req, file, cb) {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, uniqueSuffix + path.extname(file.originalname));
-    }
-});
+const storage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
     const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
@@ -32,34 +26,177 @@ const upload = multer({
     limits: { fileSize: 5 * 1024 * 1024 } // 5 MB
 });
 
+async function storeImage(file) {
+    if (!file) return null;
+
+    const filename = Date.now() + '-' + Math.round(Math.random() * 1E9) + path.extname(file.originalname);
+    if (process.env.BLOB_READ_WRITE_TOKEN) {
+        const { put } = require('@vercel/blob');
+        const blob = await put(`products/${filename}`, file.buffer, {
+            access: 'public',
+            contentType: file.mimetype,
+            addRandomSuffix: true
+        });
+        return blob.url;
+    }
+
+    fs.writeFileSync(path.join(uploadDir, filename), file.buffer);
+    return '/uploads/' + filename;
+}
+
 const app = express();
 const PORT = process.env.PORT || 35791;
+app.set('trust proxy', 1);
+
+class UpstashSessionStore extends session.Store {
+    constructor(redis, prefix = 'camelystore:session:') {
+        super();
+        this.redis = redis;
+        this.prefix = prefix;
+    }
+
+    key(sessionId) {
+        return this.prefix + sessionId;
+    }
+
+    ttl(sessionData) {
+        const maxAge = Number(sessionData?.cookie?.maxAge);
+        return Math.max(1, Math.ceil((Number.isFinite(maxAge) ? maxAge : 30 * 24 * 60 * 60 * 1000) / 1000));
+    }
+
+    get(sessionId, callback) {
+        this.redis.get(this.key(sessionId))
+            .then(data => callback(null, data || null))
+            .catch(callback);
+    }
+
+    set(sessionId, sessionData, callback) {
+        this.redis.set(this.key(sessionId), sessionData, { ex: this.ttl(sessionData) })
+            .then(() => callback && callback(null))
+            .catch(callback);
+    }
+
+    destroy(sessionId, callback) {
+        this.redis.del(this.key(sessionId))
+            .then(() => callback && callback(null))
+            .catch(callback);
+    }
+
+    touch(sessionId, sessionData, callback) {
+        this.redis.expire(this.key(sessionId), this.ttl(sessionData))
+            .then(() => callback && callback(null))
+            .catch(callback);
+    }
+}
+
+const redis = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
+    ? new Redis({
+        url: process.env.UPSTASH_REDIS_REST_URL,
+        token: process.env.UPSTASH_REDIS_REST_TOKEN
+    })
+    : null;
 
 // --- Middleware ---
 app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: true, limit: '5mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(session({
-    secret: 'camelistore_secret_key_123',
+    secret: process.env.SESSION_SECRET || 'local-development-only-secret',
     resave: false,
-    saveUninitialized: true,
-    cookie: { secure: false, maxAge: 30 * 24 * 60 * 60 * 1000 } // 30 days
+    saveUninitialized: false,
+    store: redis ? new UpstashSessionStore(redis) : undefined,
+    cookie: { secure: process.env.NODE_ENV === 'production', maxAge: 30 * 24 * 60 * 60 * 1000 }
 }));
 
-// --- Database setup ---
-const db = new sqlite3.Database('./ecommerce.db', (err) => {
-    if (err) console.error('Error opening database', err.message);
-    else {
-        console.log('Connected to SQLite database.');
-        initDb();
+class PostgresCompat {
+    constructor(connectionString) {
+        this.pool = new Pool({ connectionString, ssl: { rejectUnauthorized: false } });
+        this.queue = Promise.resolve();
     }
-});
+
+    query(sql, params, callback) {
+        const task = this.queue.then(() => this.pool.query(sql, params));
+        this.queue = task.catch(() => {});
+        task.then(result => callback(null, result)).catch(err => callback(err));
+    }
+
+    normalize(sql) {
+        return sql
+            .replace(/\?/g, (_, offset, source) => `$${(source.slice(0, offset).match(/\?/g)?.length || 0) + 1}`)
+            .replace(/INSERT OR IGNORE INTO/gi, 'INSERT INTO')
+            .replace(/(VALUES\s*\([^)]*\))\s*$/i, (match, values) =>
+                /INSERT(?: OR IGNORE)? INTO wishlist/i.test(sql) ? `${values} ON CONFLICT DO NOTHING` : match)
+            .replace(/MAX\(0,\s*stock\s*-\s*\$\d+\)/gi, (match) => match.replace(/^MAX\(0,/, 'GREATEST(0,').replace(/\)$/, ')'))
+            .replace(/datetime\('now',\s*'-30 days'\)/gi, "CURRENT_TIMESTAMP - INTERVAL '30 days'")
+            .replace(/\browid\b/gi, 'created_at')
+            .replace(/AUTOINCREMENT/gi, '')
+            .replace(/INTEGER PRIMARY KEY\s+/gi, 'SERIAL PRIMARY KEY ')
+            .replace(/REAL/gi, 'DOUBLE PRECISION')
+            .replace(/DATETIME/gi, 'TIMESTAMP');
+    }
+
+    run(sql, params = [], callback = () => {}) {
+        if (typeof params === 'function') {
+            callback = params;
+            params = [];
+        }
+        let query = this.normalize(sql);
+        const wantsId = /INSERT INTO (users|orders|reviews|wishlist)/i.test(query) && !/RETURNING/i.test(query);
+        if (wantsId) query += ' RETURNING id';
+        this.query(query, params, (err, result) => {
+            if (err) return callback.call({}, err);
+            const context = { lastID: result.rows[0]?.id, changes: result.rowCount };
+            callback.call(context, null);
+        });
+    }
+
+    get(sql, params = [], callback = () => {}) {
+        if (typeof params === 'function') {
+            callback = params;
+            params = [];
+        }
+        this.query(this.normalize(sql), params, (err, result) => {
+            if (err) return callback(err);
+            callback(null, result.rows[0]);
+        });
+    }
+
+    all(sql, params = [], callback = () => {}) {
+        if (typeof params === 'function') {
+            callback = params;
+            params = [];
+        }
+        this.query(this.normalize(sql), params, (err, result) => {
+            if (err) return callback(err);
+            callback(null, result.rows);
+        });
+    }
+
+    serialize(callback) {
+        callback();
+    }
+
+    prepare(sql) {
+        return {
+            run: (params) => this.run(sql, params),
+            finalize: (callback = () => {}) => callback()
+        };
+    }
+}
+
+// --- Database setup ---
+if (!process.env.DATABASE_URL || !process.env.DATABASE_URL.startsWith('postgres')) {
+    throw new Error('DATABASE_URL must be a PostgreSQL connection string.');
+}
+
+const db = new PostgresCompat(process.env.DATABASE_URL);
+console.log('Connected to Neon PostgreSQL database.');
+initDb();
 
 function tableHasColumn(table, col) {
     return new Promise((resolve) => {
-        db.all(`PRAGMA table_info(${table})`, (err, rows) => {
-            if (err || !rows) return resolve(false);
-            resolve(rows.some(r => r.name === col));
+        db.all('SELECT column_name AS name FROM information_schema.columns WHERE table_name = ? AND column_name = ?', [table, col], (err, rows) => {
+            resolve(!err && rows.length > 0);
         });
     });
 }
@@ -220,7 +357,7 @@ async function initDb() {
 
         // Seed demo products only if empty
         db.get("SELECT COUNT(*) as count FROM products", (err, row) => {
-            if (row && row.count === 0) {
+            if (row && Number(row.count) === 0) {
                 const demoProducts = [
                     ['w1', 'Elegant Winter Coat', 'Coats', 4500, 'https://images.unsplash.com/photo-1539533018447-63fcce2678e3?w=600&q=80', 'Stay warm in style with this elegant winter coat. Premium wool blend.', 15, 1],
                     ['w2', 'Designer Leather Tote', 'Bags', 3500, 'https://images.unsplash.com/photo-1591561954557-26941169b49e?w=600&q=80', 'Spacious and elegant leather tote bag for everyday luxury.', 20, 1],
@@ -452,12 +589,12 @@ app.get('/api/products/:id/related', (req, res) => {
     });
 });
 
-app.post('/api/products', requireAdmin, upload.single('imageFile'), (req, res) => {
+app.post('/api/products', requireAdmin, upload.single('imageFile'), async (req, res) => {
     const { id, title, category, price, description, stock, featured } = req.body;
     if (!id || !title || !category || price == null) return res.status(400).json({ error: 'id, title, category and price are required' });
 
     let image = req.body.image || '';
-    if (req.file) image = '/uploads/' + req.file.filename;
+    if (req.file) image = await storeImage(req.file);
 
     db.run(`INSERT INTO products (id, title, category, price, image, description, stock, featured)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -468,10 +605,10 @@ app.post('/api/products', requireAdmin, upload.single('imageFile'), (req, res) =
         });
 });
 
-app.put('/api/products/:id', requireAdmin, upload.single('imageFile'), (req, res) => {
+app.put('/api/products/:id', requireAdmin, upload.single('imageFile'), async (req, res) => {
     const { title, category, price, description, stock, featured } = req.body;
     let image = req.body.image;
-    if (req.file) image = '/uploads/' + req.file.filename;
+    if (req.file) image = await storeImage(req.file);
 
     // Build dynamic SET so we don't accidentally overwrite image with undefined.
     db.get("SELECT * FROM products WHERE id = ?", [req.params.id], (err, prev) => {
@@ -957,6 +1094,10 @@ app.use((err, req, res, next) => {
 // 404 for unknown API routes
 app.use('/api', (req, res) => res.status(404).json({ error: 'API endpoint not found' }));
 
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-});
+if (require.main === module) {
+    app.listen(PORT, () => {
+        console.log(`Server running on http://localhost:${PORT}`);
+    });
+}
+
+module.exports = app;
