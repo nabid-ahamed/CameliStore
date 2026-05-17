@@ -1,0 +1,8 @@
+node_modules/
+.env
+.env.*
+!.env.example
+ecommerce.db
+public/uploads/
+.vercel/
+VERCEL_DEPLOYMENT.md
