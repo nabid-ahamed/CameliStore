@@ -8,9 +8,16 @@
   --color-surface: #ffffff;
   --color-text-main: #121212;
   --color-text-muted: #666666;
+  --color-text: var(--color-text-main);
   --color-primary: #121212;
+  --color-on-primary: #ffffff;
   --color-accent: #c5a059; /* Luxury Gold */
+  --color-on-accent: #ffffff;
   --color-accent-hover: #b08d4a;
+  --color-border: rgba(0,0,0,0.08);
+  --color-control: #ffffff;
+  --color-control-hover: #f0f0f0;
+  --color-image-placeholder: #f5f5f5;
   --color-danger: #d93025;
   --color-success: #1e8e3e;
   
@@ -43,8 +50,15 @@ body.dark-mode {
   --color-surface: #121212;
   --color-text-main: #f5f5f7;
   --color-text-muted: #a1a1a6;
+  --color-text: var(--color-text-main);
   --color-primary: #f5f5f7;
+  --color-on-primary: #121212;
   --color-accent: #d4af37; /* Brighter gold for dark mode */
+  --color-on-accent: #121212;
+  --color-border: rgba(255,255,255,0.12);
+  --color-control: #1a1a1a;
+  --color-control-hover: #242424;
+  --color-image-placeholder: #1c1c1c;
 }
 
 body.dark-mode header {
@@ -61,8 +75,9 @@ body.dark-mode .product-card {
 }
 
 body.dark-mode .form-control {
-  background: #1a1a1a;
-  color: #fff;
+  background: var(--color-control);
+  color: var(--color-text-main);
+  border-color: var(--color-border);
 }
 
 body.dark-mode .auth-container,
@@ -124,14 +139,14 @@ h1, h2, h3, h4, h5, h6 { font-weight: 600; line-height: 1.2; }
 
 .btn-primary {
   background-color: var(--color-primary);
-  color: #fff;
+  color: var(--color-on-primary);
   border: 1px solid var(--color-primary);
 }
 
 .btn-primary:hover:not(:disabled) {
   background-color: var(--color-accent);
   border-color: var(--color-accent);
-  color: #fff;
+  color: var(--color-on-accent);
 }
 
 .btn-outline {
@@ -142,7 +157,7 @@ h1, h2, h3, h4, h5, h6 { font-weight: 600; line-height: 1.2; }
 
 .btn-outline:hover:not(:disabled) {
   background-color: var(--color-primary);
-  color: #fff;
+  color: var(--color-on-primary);
 }
 
 .btn-full { width: 100%; }
@@ -208,6 +223,8 @@ header.scrolled {
   transform: rotate(15deg);
 }
 
+.theme-toggle .ph-sun { display: none; }
+
 .nav-links a {
   font-weight: 500;
   color: var(--color-text-muted);
@@ -215,9 +232,8 @@ header.scrolled {
   position: relative;
 }
 
-body.dark-mode .ph-moon::before {
-  content: "\e35c"; /* sun icon in phosphor */
-}
+body.dark-mode .theme-toggle .ph-moon { display: none; }
+body.dark-mode .theme-toggle .ph-sun { display: inline-block; }
 
 .nav-links a:hover, .nav-links a.active { color: var(--color-text-main); }
 
@@ -247,7 +263,7 @@ body.dark-mode .ph-moon::before {
   top: -8px;
   right: -8px;
   background-color: var(--color-accent);
-  color: #fff;
+  color: var(--color-on-accent);
   font-size: 0.7rem;
   font-weight: 700;
   width: 20px;
@@ -317,7 +333,8 @@ body.dark-mode .ph-moon::before {
   height: 56px;
   border-radius: 18px;
   border: 1px solid rgba(0,0,0,0.05);
-  background: #fff;
+  background: var(--color-control);
+  color: var(--color-text-main);
   font-size: 1rem;
   box-shadow: 0 4px 12px rgba(0,0,0,0.02);
 }
@@ -327,7 +344,8 @@ body.dark-mode .ph-moon::before {
   border-radius: 18px;
   padding: 0 1.5rem;
   border: 1px solid rgba(0,0,0,0.05);
-  background: #fff;
+  background: var(--color-control);
+  color: var(--color-text-main);
   font-weight: 500;
   width: auto;
   min-width: 180px;
@@ -342,8 +360,8 @@ body.dark-mode .ph-moon::before {
   margin-bottom: 1rem;
 }
 .filter-tag {
-  background: #fff;
-  border: 1px solid #ddd;
+  background: var(--color-control);
+  border: 1px solid var(--color-border);
   padding: 4px 10px;
   border-radius: 999px;
   font-size: 0.85rem;
@@ -394,7 +412,7 @@ body.dark-mode .ph-moon::before {
   position: relative;
   aspect-ratio: 1/1.2;
   overflow: hidden;
-  background-color: #f5f5f5;
+  background-color: var(--color-image-placeholder);
 }
 
 .product-image {
@@ -408,7 +426,7 @@ body.dark-mode .ph-moon::before {
 
 .product-info {
   padding: 1.5rem;
-  background: #fff;
+  background: var(--color-surface);
   flex: 1;
 }
 
@@ -446,7 +464,7 @@ body.dark-mode .ph-moon::before {
   border-radius: 4px;
 }
 
-.badge-featured { background: var(--color-accent); color: #fff; }
+.badge-featured { background: var(--color-accent); color: var(--color-on-accent); }
 .badge-warning { background: var(--color-warning); color: #fff; }
 .badge-danger { background: var(--color-danger); color: #fff; }
 .badge-success { background: var(--color-success); color: #fff; }
@@ -459,8 +477,8 @@ body.dark-mode .ph-moon::before {
   height: 38px;
   border-radius: 50%;
   border: none;
-  background: rgba(255,255,255,0.95);
-  color: #999;
+  background: var(--color-control);
+  color: var(--color-text-muted);
   font-size: 1.2rem;
   cursor: pointer;
   display: flex;
@@ -592,15 +610,16 @@ body.dark-mode .ph-moon::before {
 .cart-item-price { font-size: 0.85rem; color: var(--color-text-muted); }
 
 .qty-btn {
-  border: 1px solid #ddd;
-  background: #fff;
+  border: 1px solid var(--color-border);
+  background: var(--color-control);
+  color: var(--color-text-main);
   width: 26px;
   height: 26px;
   cursor: pointer;
   border-radius: 4px;
   font-weight: 600;
 }
-.qty-btn:hover { background: #f0f0f0; }
+.qty-btn:hover { background: var(--color-control-hover); }
 
 .cart-item-remove {
   background: none;
@@ -712,7 +731,7 @@ body.dark-mode .ph-moon::before {
 }
 
 .data-table th {
-  background-color: #fcfcfc;
+  background-color: var(--color-control);
   font-weight: 600;
   color: var(--color-text-main);
   text-transform: uppercase;
@@ -721,7 +740,7 @@ body.dark-mode .ph-moon::before {
 }
 
 .data-table tr:last-child td { border-bottom: none; }
-.data-table tr:hover td { background: #fdfdfd; }
+.data-table tr:hover td { background: var(--color-control-hover); }
 
 .td-img {
   width: 50px;
@@ -782,12 +801,13 @@ body.dark-mode .ph-moon::before {
 .form-control {
   width: 100%;
   padding: 0.7rem 0.9rem;
-  border: 1px solid #ddd;
+  border: 1px solid var(--color-border);
   border-radius: var(--border-radius-sm);
   font-family: inherit;
   font-size: 0.95rem;
   transition: var(--transition);
-  background: #fff;
+  background: var(--color-control);
+  color: var(--color-text-main);
 }
 
 .form-control:focus {
@@ -809,7 +829,7 @@ body.dark-mode .ph-moon::before {
 
 .toast {
   background-color: var(--color-text-main);
-  color: #fff;
+  color: var(--color-bg);
   padding: 1rem 1.5rem;
   border-radius: var(--border-radius-sm);
   box-shadow: var(--shadow-md);
@@ -862,7 +882,7 @@ footer {
 }
 
 .stat-card {
-  background: #fff;
+  background: var(--color-surface);
   padding: 1.5rem;
   border-radius: var(--border-radius-sm);
   box-shadow: var(--shadow-sm);

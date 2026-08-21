@@ -2,7 +2,7 @@
 
 CameliStore is a high-end, minimalist ecommerce platform built with a focus on luxury aesthetics and a seamless user experience. This full-stack application provides a complete shopping journey, from product discovery to secure administrative management.
 
-![CameliStore Preview](https://via.placeholder.com/1200x600?text=CameliStore+Premium+UI+Preview)
+![CameliStore Preview](public/images/store-preview.png)
 
 ## ✨ Key Features
 
