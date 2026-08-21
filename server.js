@@ -9,8 +9,10 @@ const fs = require('fs');
 const multer = require('multer');
 
 // --- File Upload Setup ---
-const uploadDir = path.join(__dirname, 'public/uploads');
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+const isVercel = Boolean(process.env.VERCEL);
+const uploadDir = isVercel
+    ? path.join('/tmp', 'camel-store-uploads')
+    : path.join(__dirname, 'public/uploads');
 
 const storage = multer.memoryStorage();
 
@@ -40,6 +42,7 @@ async function storeImage(file) {
         return blob.url;
     }
 
+    if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
     fs.writeFileSync(path.join(uploadDir, filename), file.buffer);
     return '/uploads/' + filename;
 }
